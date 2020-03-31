@@ -1,0 +1,204 @@
+- !policy
+  id: authn-jenkins/prod
+  body:
+  - !webservice
+  - !group clients
+
+  # these will be used to connect to the jenkins server and see if a specific job is running
+  - !variable jenkinsURL
+  - !variable jenkinsUsername
+  - !variable jenkinsPassword
+  - !variable jenkinsCertificate
+
+  # create a group that can authenticate to this jenkins instance
+  - !permit
+    role: !group clients
+    privilege: [ read, authenticate ]
+    resource: !webservice
+
+- !policy
+  id: authn-k8s/k8s-follower
+  body:
+  - !webservice
+  
+  - !variable kubernetes/service-account-token
+  - !variable kubernetes/ca-cert
+  - !variable kubernetes/api-url
+  
+  - !variable ca/key
+
+  - !variable ca/cert
+
+  - !policy
+    id: apps
+    body:
+    - !layer
+
+    - &authenticated-resources-k8s
+      - !host
+        id: dap/service_account/conjur-cluster
+        annotations:
+          kubernetes/authentication-container-name: authenticator
+          kubernetes: "true"
+
+      - !host
+        id: demoapps/service_account/go-app-account
+        annotations:
+          kubernetes/authentication-container-name: authenticator
+          kubernetes: "true"
+
+      - !host
+        id: demoapps/service_account/curl-account
+        annotations:
+          kubernetes/authentication-container-name: authenticator
+          kubernetes: "true"
+
+      - !host
+        id: demoapps/service_account/secretless-account
+        annotations:
+          kubernetes/authentication-container-name: secretless-broker
+          kubernetes: "true"
+
+      - !host
+        id: demoapps/service_account/k8ssecretdap-account
+        annotations:
+          kubernetes/authentication-container-name: cyberark-secrets-provider
+          kubernetes: "true"
+          
+      - !host
+        id: demoapps/deployment/goapp
+        annotations:
+          kubernetes/authentication-container-name: authenticator
+          kubernetes: "true"
+
+      - !host
+        id: demoapps/deployment/secretless
+        annotations:
+          kubernetes/authentication-container-name: secretless-broker
+          kubernetes: "true"
+
+      - !host
+        id: demoapps/deployment/secretless-mysql
+        annotations:
+          kubernetes/authentication-container-name: secretless-broker
+          kubernetes: "true"
+
+      - !host
+        id: demoapps/deployment/curl
+        annotations:
+          kubernetes/authentication-container-name: authenticator
+          kubernetes: "true"
+
+      - !host
+        id: demoapps/deployment/k8ssecretdap
+        annotations:
+          kubernetes/authentication-container-name: cyberark-secrets-provider
+          kubernetes: "true"
+
+
+    - !grant
+      role: !layer
+      members: *authenticated-resources-k8s
+
+  - !permit
+    resource: !webservice
+    privilege: [ read, authenticate ]
+    role: !layer apps
+
+- !policy
+  id: authn-k8s/ocp-follower
+  body:
+  - !webservice
+  
+  - !variable kubernetes/service-account-token
+  - !variable kubernetes/ca-cert
+  - !variable kubernetes/api-url
+  
+  - !variable ca/key
+
+  - !variable ca/cert
+
+  - !policy
+    id: apps
+    body:
+    - !layer
+
+    - &authenticated-resources-ocp
+      - !host
+        id: dap/service_account/conjur-cluster
+        annotations:
+          kubernetes/authentication-container-name: authenticator
+          openshift: "true"
+
+      - !host
+        id: dap-deconstructed-follower/service_account/follower_account
+        annotations:
+          kubernetes/authentication-container-name: seedfetcher
+          openshift: "true"
+
+      - !host
+        id: demoapps/service_account/go-app-account
+        annotations:
+          kubernetes/authentication-container-name: authenticator
+          openshift: "true"
+
+      - !host
+        id: demoapps/service_account/curl-account
+        annotations:
+          kubernetes/authentication-container-name: authenticator
+          openshift: "true"
+
+      - !host
+        id: demoapps/service_account/secretless-account
+        annotations:
+          kubernetes/authentication-container-name: secretless-broker
+          openshift: "true"
+
+      - !host
+        id: demoapps/deployment/goapp
+        annotations:
+          kubernetes/authentication-container-name: authenticator
+          openshift: "true"
+
+      - !host
+        id: demoapps/deployment/secretless
+        annotations:
+          kubernetes/authentication-container-name: secretless-broker
+          openshift: "true"
+
+      - !host
+        id: demoapps/deployment/curl
+        annotations:
+          kubernetes/authentication-container-name: authenticator
+          openshift: "true"
+
+    - !grant
+      role: !layer
+      members: *authenticated-resources-ocp
+
+  - !permit
+    resource: !webservice
+    privilege: [ read, authenticate ]
+    role: !layer apps
+    
+- !policy
+  id: seed-generation
+  body:
+  - !webservice
+  - !layer consumers
+  - !permit
+    role: !layer consumers
+    privilege: [ "execute" ]
+    resource: !webservice
+
+- !grant
+  role: !layer seed-generation/consumers
+  member: !host /conjur/authn-k8s/k8s-follower/apps/dap/service_account/conjur-cluster
+  
+- !grant
+  role: !layer seed-generation/consumers
+  member: !host /conjur/authn-k8s/ocp-follower/apps/dap/service_account/conjur-cluster
+
+- !grant
+  role: !layer seed-generation/consumers
+  member: !host /conjur/authn-k8s/ocp-follower/apps/dap-deconstructed-follower/service_account/follower_account

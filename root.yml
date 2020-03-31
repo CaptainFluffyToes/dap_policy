@@ -1,0 +1,95 @@
+---
+- !user mike
+
+- !user john
+
+- !user paul
+
+- !user eva
+
+- !host policy_updater
+
+- !host pcf-service-broker
+
+- !group epv-admins
+
+- !policy
+  id: epv
+  owner: !group epv-admins
+  
+- !host
+  id: Sync_COMPONENTS
+  
+- !grant
+  role: !group epv-admins
+  members:
+  - !host Sync_COMPONENTS
+
+- !group admins
+
+- !group devops
+
+- !group pcf-admin-group
+
+- !permit
+  role: !host pcf-service-broker
+  privilege: read
+  resource: !host pcf-service-broker
+  
+- !grant
+  role: !group pcf-admin-group
+  members: 
+   - !host pcf-service-broker
+   - !host policy_updater
+
+- !grant
+  role: !group admins
+  members:
+   - !user mike
+   - !user eva
+
+- !grant
+  role: !group devops
+  members:
+   - !user john
+   - !user paul
+   - !host policy_updater
+   - !group admins
+
+- !permit
+  role: !group admins
+  privileges:
+   - read
+   - update
+   - create
+  resources:
+   - !policy root
+
+- !permit
+  role: !host policy_updater
+  privileges:
+   - read
+   - update
+   - create
+  resources:
+   - !policy root
+
+- !policy
+  id: conjur
+  owner: !group devops
+
+- !policy
+  id: cicd
+  owner: !group devops
+  
+- !policy
+  id: pcf
+  owner: !group pcf-admin-group
+
+- !policy
+  id: secrets
+  owner: !group devops
+  
+- !grant
+  role: !group epv/appaccts/devops_apps/delegation/consumers
+  member: !layer cicd/ansible
