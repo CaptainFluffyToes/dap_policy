@@ -11,20 +11,6 @@
 
 - !host pcf-service-broker
 
-- !group epv-admins
-
-- !policy
-  id: epv
-  owner: !group epv-admins
-  
-- !host
-  id: Sync_COMPONENTS
-  
-- !grant
-  role: !group epv-admins
-  members:
-  - !host Sync_COMPONENTS
-
 - !group admins
 
 - !group devops
@@ -89,7 +75,3 @@
 - !policy
   id: secrets
   owner: !group devops
-  
-- !grant
-  role: !group epv/appaccts/devops_apps/delegation/consumers
-  member: !layer cicd/ansible

@@ -1,0 +1,13 @@
+- !group <vault_name>-admins
+
+- !policy
+  id: <vault_name>
+  owner: !group <vault_name>-admins
+  
+- !host
+  id: <Components_HostName *Sync_<machine_name>*>
+
+- !grant
+  role: !group <vault_name>-admins
+  members:
+  - !host <Components_HostName *Sync_<machine_name>*>
