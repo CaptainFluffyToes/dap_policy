@@ -15,3 +15,12 @@
   - !grant
     role: !layer
     member: !host
+
+- !policy
+  id: puppet
+  body:
+  - !layer
+  - !host
+  - !grant
+    role: !layer
+    member: !host
