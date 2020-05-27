@@ -1,7 +1,7 @@
 #What is this template?
 ##This template is what the vault-conjur-synchronizer creates within DAP. Including from multiple VCS implementations. 
 #How to use?
-##Replace the items in '<>' with the actual name as created when installing the VCS
+##Replace the items in '<>' with the actual name as created when installing the VCS. Add the contents to the top of the root policy. 
 
 - !group <vault_name>-admins
 
