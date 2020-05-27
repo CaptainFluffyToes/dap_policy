@@ -1,3 +1,8 @@
+#What is this template?
+##This template is what the vault-conjur-synchronizer creates within DAP. Including from multiple VCS implementations. 
+#How to use?
+##Replace the items in '<>' with the actual name as created when installing the VCS
+
 - !group <vault_name>-admins
 
 - !policy
@@ -5,9 +10,49 @@
   owner: !group <vault_name>-admins
   
 - !host
-  id: <Components_HostName *Sync_<machine_name>*>
+  id: <Components_HostName in format *Sync_<machine_name>*>
 
 - !grant
   role: !group <vault_name>-admins
   members:
-  - !host <Components_HostName *Sync_<machine_name>*>
+  - !host <Components_HostName in format *Sync_<machine_name>*>
+
+- !policy
+  id: <vault_name>
+  owner: !group <vault_name>-admins
+  body:
+    - !group
+      id: <LOBName>-admins
+
+    - !policy
+      id: <LOBName>
+      owner: !group <LOBName>-admins
+      body:
+        - !group
+          id: <safeName>-admins
+
+        - !policy
+          id: <safeName>
+          owner: !group <safeName>-admins
+          body:
+            - !group
+              id: delegation/consumers
+
+            - &<vault_name>-<LOBName>-<safeName>-variables
+              - !variable
+                id: account-object-name1/username
+              - !variable
+                id: account-object-name1/password
+              - !variable
+                id: account-object-name2/username
+              - !variable
+                id: account-object-name2/password
+              - !variable
+                id: virtualUsername-1/username
+              - !variable
+                id: virtualUsername-2/password
+
+            - !permit
+              role: !group delegation/consumers
+              privileges: [read, execute]
+              resources: *<vault_name>-<LOBName>-<safeName>-variables
